@@ -1,4 +1,7 @@
 <?php
+///
+/// PHP SHORTCUT SERVICES
+///
 require_once 'config.php';
 require_once 'init.php';
 require_once 'utils.php';
