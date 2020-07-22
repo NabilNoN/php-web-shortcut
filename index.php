@@ -190,6 +190,40 @@ function deleteShortcut($uri){
     }
 }
 
+function recoverShortcut($uri){
+    $count=count($uri);
+    try {
+        $sql = initDatabase();
+        $u1=$uri[1];//shortcut
+
+        //chick is id or shortcut
+        if(strstart(strtolower($u1),"id")){
+            $uid=substr($u1,2);
+            if(is_numeric($uid))$u1=$uid;
+        }
+
+        //find url
+        $url = $sql->where((is_numeric($u1)?'id':'shortcut'), $u1)/*->and_where('enabled','Y')*/->get('urls');
+        if($sql->num_rows()===1){
+            if($url['enabled']==='Y'){
+                indexShortcutUrlPage("<span class='block error'>Already Exist!</span>");
+                return;
+            }
+
+            //recover shortcut
+            $sql->where('id', $url['id'])->update("urls",[
+                    'enabled'=>'Y',
+                ]);
+            $url['enabled']='Y';
+
+            showResult($url);
+        }else indexShortcutUrlPage("<span class='block error'>$u1($count) - 400-not-available-shortcut</span>");
+    } catch (Exception $e) {
+        $ec=$e->getCode();
+        indexShortcutUrlPage("<span class='block error'>$ec - exception-recover-shortcut</span>");
+    }
+}
+
 function main(){
     $url = $_SERVER['REQUEST_URI'];
     $uri=explode("/",trim($url,"/"));
@@ -207,6 +241,9 @@ function main(){
         }else if($uri[0]==="delete" && count($uri)>1){
             //https://facce.app/delete/shortcut
             deleteShortcut($uri);
+        }else if($uri[0]==="recover" && count($uri)>1){
+            //https://facce.app/recover/shortcut
+            recoverShortcut($uri);
         }else initShortcut($uri);
     }else{
         indexShortcutUrlPage();
@@ -309,7 +346,7 @@ function indexShortcutUrlPage($content=""){
             ul.functions li b {
                 background-color: lavender;
                 box-shadow: gray 0 0 1px 1px;
-                margin: 0 4px;
+                margin: 4px;
                 border-radius: 2px;
                 padding: 3px 10px;
                 cursor: default;
@@ -386,6 +423,19 @@ function indexShortcutUrlPage($content=""){
                 padding: 10px 5px;
             }
 
+            p{
+                padding: 10px;
+                margin: 4px;
+                box-shadow: inset 0 0 16px 4px #ffffff;
+                border-radius: 8px;
+                overflow: hidden;
+                border: gray 1px solid;
+            }
+
+            .scroll-auto-x{
+                overflow-x: auto;
+            }
+
             /*classes*/
             .block {
                 display: block !important;
@@ -415,10 +465,11 @@ function indexShortcutUrlPage($content=""){
     <div class="body">
         <?php if (!empty($content)) echo $content; ?>
         <ul class="functions">
-            <li><b>new</b>&dash; https://<?php echo $_SERVER['HTTP_HOST']; ?>/new/owner/https://original.url</li>
-            <li><b>edit</b>&dash; https://<?php echo $_SERVER['HTTP_HOST']; ?>/edit/shortcut/newOwner[/https://neworiginal.url]</li>
-            <li><b>get</b>&dash; https://<?php echo $_SERVER['HTTP_HOST']; ?>/get/[shortcut|sortAll]</li>
-            <li><b>delete</b>&dash; https://<?php echo $_SERVER['HTTP_HOST']; ?>/delete/shortcut</li>
+            <li><b>new</b><p class="scroll-auto-x">https://<?php echo $_SERVER['HTTP_HOST']; ?>/new/owner/https://original.url</p></li>
+            <li><b>edit</b><p class="scroll-auto-x">https://<?php echo $_SERVER['HTTP_HOST']; ?>/edit/shortcut/newOwner[/https://neworiginal.url]</p></li>
+            <li><b>get</b><p class="scroll-auto-x">https://<?php echo $_SERVER['HTTP_HOST']; ?>/get/[shortcut|sortAll]</p></li>
+            <li><b>delete</b><p class="scroll-auto-x">https://<?php echo $_SERVER['HTTP_HOST']; ?>/delete/shortcut</p></li>
+            <li><b>recover</b><p class="scroll-auto-x">https://<?php echo $_SERVER['HTTP_HOST']; ?>/recover/shortcut</p></li>
         </ul>
     </div>
     <hr/>
