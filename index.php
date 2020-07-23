@@ -44,6 +44,11 @@ function newShortcutUrl($uri){
             $original.=$uri[$i].($i===(count($uri)-1)?"":"/");
         }
 
+        if($owner==="owner" || (stristr($owner,"owner") && strlen($owner)===strlen("owner"))){
+            indexShortcutUrlPage("<span class='block error'>$owner - not-allowed-owner-shortcut</span>");
+            return;
+        }
+
         generate:
         $info=[
             "owner"=>$owner,
